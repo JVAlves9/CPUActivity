@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <cpuid.h>
 #include <sys/sysinfo.h>
-#include <unistd.h>
+#include "uptime.h"
 
 int main (){
     const double megabyte = 1024*1024;
@@ -10,7 +10,8 @@ int main (){
     struct sysinfo si;
 
     printf("%d\n",sysinfo(&si));
-    printf("%f\n",si.totalhigh);
+    readUptime();
+    printf("%%d\n");
     system("free");
     double totalram = si.totalram/megabyte;
     double free_ram = (si.bufferram/megabyte+si.freeram/megabyte+si.sharedram/megabyte);
