@@ -10,7 +10,7 @@ int main (){
     struct sysinfo si;
 
     printf("%d\n",sysinfo(&si));
-    readUptime();
+    calculate();
     printf("%%d\n");
     system("free");
     double totalram = si.totalram/megabyte;
