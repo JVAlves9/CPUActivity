@@ -12,8 +12,8 @@ void readUptime(float *used, float *idle){
     char c=fgetc(uptime);   //get fisrt character of the file
 
     for(i = 0 ;c != ' '; i++) { //iterate until last digit of first number
-        c = fgetc(uptime);
         temp[i]=c;
+        c = fgetc(uptime);
     }
     *used = atof(temp);  //convert string into float
     for(i = 0 ; i < 15 ; i++ ){ //same iteration, but for second number
