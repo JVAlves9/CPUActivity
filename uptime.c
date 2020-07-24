@@ -82,6 +82,6 @@ void calculate(){
     double seconds = used1 - (u1 / hz);
     calc2 = 100*((t1 / hz) / seconds);
 
-    calc = ((used2 - used1) / (idle2 - idle1 + used2 - used1)) * 100;   //perc of usage
+    calc = ((used2 - used1) / (idle2 - idle1 + used2 - used1)) * 100;   //perc of usage // wrong, will change
     printf("per used : %.2f %%\nper2: %.2f\n",calc,calc2);
 }
