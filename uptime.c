@@ -2,10 +2,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/sysinfo.h>
 
-void readUptime(float *used, float *idle){
+void readUptime(float *used){
     FILE *uptime = fopen("/proc/uptime","r");   //get the file containing the active and idle times of the cpu
     
+    if( uptime == NULL){
+        exit(EXIT_FAILURE);
+    }
+
     int i;
     char temp[15];
 
@@ -16,17 +21,10 @@ void readUptime(float *used, float *idle){
         c = fgetc(uptime);
     }
     *used = atof(temp);  //convert string into float
-    for(i = 0 ; i < 15 ; i++ ){ //same iteration, but for second number
-        if (c != EOF){  //just get chars until end of file not reached
-            c = getc(uptime);
-            temp[i] = c;
-        }else{  //complete the rest with zeros in case the first number was longer than the second
-            temp[i]=0;
-        }
-    }
-    *idle = atof(temp);
-    printf("first: %f\nsecond: %f\n",*used,*idle);
+    
+    fclose(uptime);
 }
+
 void stat(long *t,long *u,char pid[]){
     
     char pro[20] = "/proc/"; //proc directory
@@ -35,6 +33,10 @@ void stat(long *t,long *u,char pid[]){
     strcat(pro,"/stat");    //stat pseudo -file
     
     FILE *sta = fopen(pro,"r");     //accessing the file
+
+    if( sta == NULL){
+        exit(EXIT_FAILURE);
+    }
 
     int i,j;
     char temp [15];     //temp used to store the number in string, then converting to long
@@ -50,7 +52,7 @@ void stat(long *t,long *u,char pid[]){
         }
         if( i == 13 || i ==14){
             lgs[i-13] = atol(temp);     //parsing char to long
-            for ( j = 0; j < sizeof temp; j++ ){ temp[j] = '\0'; }  //cleaning the temp variable
+            for ( j = 0; j < (sizeof temp)/sizeof (char) ; j++ ){ temp[j] = '\0'; }  //cleaning the temp variable
 
         }else if (i ==21){
             lgs[2]= atol(temp);
@@ -60,28 +62,83 @@ void stat(long *t,long *u,char pid[]){
     }
     *t = lgs[0]+lgs[1]; // total time this process used the cpu
     *u = lgs[2];
-    printf("t: %ld, u: %ld\n",*t,*u);
+    fclose(sta);
 }
 
+long * procStat(long idle[], int cpus){
+    long * r = malloc( (cpus+1) * sizeof (long)); // allocate the memory for the returning array containing the cpus times
+    FILE * stat = fopen("/proc/stat","r");
+    long lgs[10];   //cpu times temporary variable
+    int i, j, k ;
+    char temp[15];      //temp variable to parse char to long
+    char c =  fgetc(stat);
+
+    if( stat == NULL){
+        exit(EXIT_FAILURE);
+    }
+
+    for (k = 0 ; k<cpus+1; k++){    // get through the lines
+        for( i = 0; i< 11;i++){   //get through the columns
+            for(j = 0; c != ' ' && c!='\n'; j ++){     //get through the digits
+                if(i != 0 ){       //exclude 'cpu' text
+                    temp[j] = c;
+                    
+                }
+                c= getc(stat);
+            }
+            if( c == '\n'){ //break in new line
+                lgs[i - 1] = atol(temp);
+                break;
+            }
+            else if( i != 0 ){
+                lgs[i - 1] = atol(temp);
+                for ( j = 0; j < (sizeof temp)/sizeof (char) ; j++ ){ temp[j] = '\0'; }
+            }
+            c=getc(stat);
+            if( c == ' '){ i--;}    //there's an extra space after the first cpu
+        }
+        r[k]= 0;    //initialize
+        idle[k] = lgs[3];   //save the idle numbers
+        for( j = 0 ; j < (sizeof lgs)/sizeof (long); j++){
+            if( j != 3){
+                r[k] += lgs[j];     //sum all times, except idle
+            }
+        }
+        c=getc(stat);
+    }
+    fclose(stat);
+    return r;
+}
 void calculate(){
-    float used1 =0, used2=0, idle1=0, idle2=0;
-    long t1,u1,t2,u2;
-    float calc=0;
-    double calc2 = 0.0;
+    float up1 =0, up2=0;
+    int cpus = get_nprocs(),i;
+    long t1, u1, t2, u2, idles1[cpus+1], idles2[cpus+1], *used1, *used2;
+    float calc=0,calc0=0, total, used/*,calc1=0,calc2=0, calc3=0*/;
+    double calcp = 0.0;
     char pid[6]="";
     long hz = sysconf(_SC_CLK_TCK);
     
     scanf("%s",&pid);
 
-    readUptime(&used1,&idle1);  //first values 
+    readUptime(&up1);  //first values 
     stat(&t1,&u1,pid);
+    used1 = procStat(idles1,cpus);
     sleep(1);
-    //stat(&t2,&u2);
-    readUptime(&used2,&idle2);  //second values
-    printf("\nused1: %f,");
-    double seconds = used1 - (u1 / hz);
-    calc2 = 100*((t1 / hz) / seconds);
+    //stat(&t2,&u2,pid);
+    used2 = procStat(idles2,cpus);
+    readUptime(&up2);  //second values
 
-    calc = ((used2 - used1) / (idle2 - idle1 + used2 - used1)) * 100;   //perc of usage // wrong, will change
-    printf("per used : %.2f %%\nper2: %.2f\n",calc,calc2);
+    double seconds = up1 - (u1/hz);
+    used = (used2[0] - used1[0]);
+
+    calcp = ((( t1 ) / hz )/seconds /*/ used*/ ) * 100; //usage of the process // working on this
+
+    printf("per used : %.2f %%\nper2: %.2f\n",calc,calcp);
+
+    for(i = 0; i < cpus+1; i++ ){   //per usage of each cpu, the first is from all cpus
+        total = (idles2[i] - idles1[i] + used2[i] - used1[i]);
+        used = (used2[i] - used1[i]);
+        calc0 = (used / total) * 100;
+        printf("cpu%d:  %.2f%%\n",i,calc0);
+    }
 }

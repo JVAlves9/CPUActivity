@@ -9,10 +9,8 @@ int main (){
 
     struct sysinfo si;
 
-    printf("%d\n",sysinfo(&si));
     calculate();
-    printf("%%d\n");
-    system("free");
+    /*system("free");
     double totalram = si.totalram/megabyte;
     double free_ram = (si.bufferram/megabyte+si.freeram/megabyte+si.sharedram/megabyte);
     double perc_free_ram = (free_ram/totalram)*100;
@@ -21,7 +19,7 @@ int main (){
     printf("\n");
     int a,b,c,d;
     __cpuid(0,a,b,c,d);
-    printf("EAX: %x\nEBX: %x\nECX: %x\nEDX: %x\n",a,b,c,d);
+    printf("EAX: %x\nEBX: %x\nECX: %x\nEDX: %x\n",a,b,c,d);*/
 
     return 0;
 }
