@@ -53,6 +53,10 @@ void stat(long *t,long *u,char pid[]){
         if( i == 13 || i ==14){
             lgs[i-13] = atol(temp);     //parsing char to long
             for ( j = 0; j < (sizeof temp)/sizeof (char) ; j++ ){ temp[j] = '\0'; }  //cleaning the temp variable
+            if( *u != 0){
+                lgs[2] = *u;
+                break; 
+            }
 
         }else if (i ==21){
             lgs[2]= atol(temp);
@@ -75,6 +79,9 @@ long * procStat(long idle[], int cpus){
 
     if( stat == NULL){
         exit(EXIT_FAILURE);
+    }else if(r ==  NULL){
+        exit(EXIT_FAILURE);
+        
     }
 
     for (k = 0 ; k<cpus+1; k++){    // get through the lines
@@ -109,31 +116,32 @@ long * procStat(long idle[], int cpus){
     fclose(stat);
     return r;
 }
+
+char * directoriesInProc(){
+    char * r;
+}
+
 void calculate(){
-    float up1 =0, up2=0;
-    int cpus = get_nprocs(),i;
-    long t1, u1, t2, u2, idles1[cpus+1], idles2[cpus+1], *used1, *used2;
+    float up1 =0, calcp = 0.0;
+    int cpus = get_nprocs(), i;
+    long  idles1[cpus+1], idles2[cpus+1], *used1, *used2;
+    unsigned long process_ticks1, process_start_time = 0, process_ticks2;
     float calc=0,calc0=0, total, used/*,calc1=0,calc2=0, calc3=0*/;
-    double calcp = 0.0;
     char pid[6]="";
     long hz = sysconf(_SC_CLK_TCK);
     
     scanf("%s",&pid);
 
-    readUptime(&up1);  //first values 
-    stat(&t1,&u1,pid);
-    used1 = procStat(idles1,cpus);
+    readUptime(&up1);   
+    stat(&process_ticks1,&process_start_time,pid);
+    used1 = procStat(idles1,cpus);//first values
     sleep(1);
-    //stat(&t2,&u2,pid);
-    used2 = procStat(idles2,cpus);
-    readUptime(&up2);  //second values
+    stat(&process_ticks2,&process_start_time,pid);
+    used2 = procStat(idles2,cpus);//second values
 
-    double seconds = up1 - (u1/hz);
-    used = (used2[0] - used1[0]);
+    calcp =(float) ( process_ticks2 - process_ticks1 ) / hz ; //usage of the process | time passed is 1s, so no need to divide
 
-    calcp = ((( t1 ) / hz )/seconds /*/ used*/ ) * 100; //usage of the process // working on this
-
-    printf("per used : %.2f %%\nper2: %.2f\n",calc,calcp);
+    printf("per used : %.2f %%\n",100 * calcp);
 
     for(i = 0; i < cpus+1; i++ ){   //per usage of each cpu, the first is from all cpus
         total = (idles2[i] - idles1[i] + used2[i] - used1[i]);
