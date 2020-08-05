@@ -6,27 +6,13 @@
 #include <regex.h>
 #include <dirent.h>
 #include <time.h>
-typedef struct 
-{
-    char ** directories;    //array of strins containing the processess' PIDs 
-    size_t size;    //array size
-    size_t bytes;   //number of bytes used
-}dirs;
-
-typedef struct
-{
-    char  * pid;
-    char * comm;
-    long ticks1;
-    long ticks2;
-    long startime;
-}process;
-
+#include "listOfProcess.h"
 
 void readUptime(float *used){
     FILE *uptime = fopen("/proc/uptime","r");   //get the file containing the active and idle times of the cpu
     
     if( uptime == NULL){
+        printf("couldn't open file in uptime");
         exit(EXIT_FAILURE);
     }
 
@@ -54,6 +40,7 @@ void stat(long *t,long *u,char pid[]){
     FILE *sta = fopen(pro,"r");     //accessing the file
 
     if( sta == NULL){
+        printf("file couldn't open in stat");
         exit(EXIT_FAILURE);
     }
 
@@ -97,10 +84,11 @@ long * procStat(long idle[], int cpus){
     char c =  fgetc(stat);
 
     if( stat == NULL){
+        printf("stat file was not open");
         exit(EXIT_FAILURE);
     }else if(r ==  NULL){
+        printf("allocation couldn't occur in proc stat");
         exit(EXIT_FAILURE);
-        
     }
 
     for (k = 0 ; k<cpus+1; k++){    // get through the lines
@@ -136,50 +124,46 @@ long * procStat(long idle[], int cpus){
     return r;
 }
 
-dirs PIDsInProc(){
-    dirs dirs;  //struct with an array of PIDs
-    int i = 0;
+void PIDsInProc(){
+    char * temp;
     DIR * dir = opendir("/proc");   //opening the process folder 
     struct dirent *dir_access; 
     regex_t regex;
 
     if(dir == NULL){
         printf("Couldn't open directory");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     if( regcomp(&regex,"[0-9]+",REG_EXTENDED) != 0){    //regular expression will make sure that tthe name of the folder is a number, thus it is a PID
         printf("regcomp problem");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
-    
-    dirs.size = 0;
-    dirs.bytes = 0;
-    dirs.directories = malloc(1);
 
     while( (dir_access = readdir(dir)) != NULL ){//go though the files and folders in this directory   // DT_DIR confirms that it is in fact a folder
         if( dir_access->d_type == DT_DIR && regexec(&regex,dir_access->d_name,0,NULL,REG_EXTENDED)==0 ){//regexec checks if it matches with the regex var
-            dirs.bytes+= (strlen(dir_access->d_name)+1)*4;      //bytes needed - pointers and chars
-            dirs.directories = realloc(dirs.directories,dirs.bytes);    //increase the allocatedd memory for the upcoming string
-            dirs.directories[dirs.size] = dir_access->d_name;
-            dirs.size++;
+            
+            temp = (char *) malloc( strlen(dir_access->d_name) * sizeof (char *) );
+            strcpy(temp,dir_access->d_name);
+            addPro(temp);
+
         }
     }
 
     closedir(dir);
-    return dirs;
-}
+}//it may appear thaat DT_DIR is an error, but it compiles fine
 
 char * command(char pid[]){     //get the name of the process command
     int i = 0;
-    char * cmd;
+    char * cmd = (char *) malloc( sizeof (char *) );
     char pro[20] = "/proc/";
-    char c, temp[20];
+    char c;
     strcat(pro,pid);
     strcat(pro,"/comm");
     FILE * comm = fopen(pro,"r");
 
     if( comm == NULL){
+        printf("empty command");
         exit(EXIT_FAILURE);
     }
 
@@ -187,11 +171,10 @@ char * command(char pid[]){     //get the name of the process command
 
     for (int i = 0; c!=EOF; i++)
     {
-        temp[i] = c;
+        cmd = (char *) realloc( cmd, ( i+1 ) * sizeof ( char *));
+        cmd[i] = c;
         c = getc(comm);
     }
-    cmd = malloc(strlen(temp)+1);
-    strcpy(cmd,temp);
     
     return cmd;
 }
@@ -203,33 +186,41 @@ void calculate(){
     float calc=0,calc0=0, total, used/*,calc1=0,calc2=0, calc3=0*/;
     char pid[6]="";
     long hz = sysconf(_SC_CLK_TCK);
+    Node * h, * temp;
 
-    dirs dirs = PIDsInProc();
-    process pro[dirs.size];
-    
-    for( i = 0; i < dirs.size; i++ ){
-        pro[i].pid = dirs.directories[i];
-        pro[i].ticks1 = 0;
-        pro[i].ticks2 = 0;
-        pro[i].startime = 0;
-        pro[i].comm = command(pro[i].pid);
+    PIDsInProc();
+    h = getHead();
+    initiateProcValues();
+
+    temp = h;   
+    while(temp!=NULL){
+        temp->value.comm = command(temp->value.pid);
+        temp = temp->next;
     }
-
-    readUptime(&up1);   
-    for(i=0; i < dirs.size; i++){
-        stat(&pro[i].ticks1,&pro[i].startime,pro[i].pid);   //get all processes ticks
+    
+    readUptime(&up1);
+    temp = h;   
+    while(temp!=NULL){
+        stat(&temp->value.ticks1,&temp->value.startime,temp->value.pid);   //get all processes ticks
+        temp = temp->next;
     }
     used1 = procStat(idles1,cpus);//first values
+
     sleep(1);
-    for(i=0; i < dirs.size; i++){
-        stat(&pro[i].ticks2,&pro[i].startime,pro[i].pid);
+
+    temp = h;
+    while(temp!=NULL){
+        stat(&temp->value.ticks2,&temp->value.startime,temp->value.pid);
+        temp = temp->next;
     }
     used2 = procStat(idles2,cpus);//second values
-    
-    for(i =0 ; i < dirs.size; i++){
-        calcp =(float) ( pro[i].ticks2 - pro[i].ticks1 ) / hz ; //usage of the processes | time passed is 1s, so no need to divide
 
-        printf("per used : %.2f %%\n",100 * calcp);
+    temp = h;
+    while(temp!=NULL){
+        calcp =(float) ( temp->value.ticks2 - temp->value.ticks1 ) / hz ; //usage of the processes | time passed is 1s, so no need to divide
+
+        printf("%s -- per used : %.2f %%\n",temp->value.comm,100 * calcp);
+        temp = temp->next;
     }
 
     for(i = 0; i < cpus+1; i++ ){   //per usage of each cpu, the first is from all cpus
