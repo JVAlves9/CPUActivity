@@ -59,7 +59,7 @@ void stat(long *t,long *u,char pid[]){
         if( i == 13 || i ==14){
             lgs[i-13] = atol(temp);     //parsing char to long
             for ( j = 0; j < (sizeof temp)/sizeof (char) ; j++ ){ temp[j] = '\0'; }  //cleaning the temp variable
-            if( *u != 0){
+            if( *u != 0 && i==4){
                 lgs[2] = *u;
                 break; 
             }
@@ -175,7 +175,8 @@ char * command(char pid[]){     //get the name of the process command
         cmd[i] = c;
         c = getc(comm);
     }
-    
+    fclose(comm);
+
     return cmd;
 }
 
