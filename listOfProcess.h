@@ -1,4 +1,4 @@
-#include "uptime.h"
+#include "cpuUsage.h"
 
 typedef struct node
 {

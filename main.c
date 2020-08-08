@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <cpuid.h>
 #include <sys/sysinfo.h>
-#include "uptime.h"
+#include "cpuUsage.h"
 
 int main (){
     const double megabyte = 1024*1024;
