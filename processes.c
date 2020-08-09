@@ -35,13 +35,14 @@ void stat(long *ticks,long *up,char pid[]){
         if( i == 13 || i ==14){
             lgs[i-13] = atol(temp);     //parsing char to long
             for ( j = 0; j < (sizeof temp)/sizeof (char) ; j++ ){ temp[j] = '\0'; }  //cleaning the temp variable
-            if( *up != 0 && i==4){
+            if( *up != 0 && i==14){
                 lgs[2] = *up;
                 break; 
             }
 
         }else if (i ==21){
             lgs[2]= atol(temp);
+            for ( j = 0; j < (sizeof temp)/sizeof (char) ; j++ ){ temp[j] = '\0'; } //the buffer was getting in the next process
             break;
         }
         c = fgetc(sta);

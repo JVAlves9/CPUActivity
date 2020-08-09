@@ -4,6 +4,7 @@
 #include <sys/sysinfo.h>
 #include "listOfProcess.h"
 #include "processes.h"
+#include <string.h>
 
 void readUptime(float *used){
     FILE *uptime = fopen("/proc/uptime","r");   //get the file containing the active and idle times of the cpu
@@ -82,7 +83,7 @@ void calculate(){
     long  idles1[cpus+1], idles2[cpus+1], *used1, *used2;
     float calc=0,calc0=0, total, used/*,calc1=0,calc2=0, calc3=0*/;
     char pid[6]="";
-    long hz = sysconf(_SC_CLK_TCK);
+    long hz = sysconf(_SC_CLK_TCK); //used to transform ticks into seconds
     Node * h, * temp;
 
     PIDsInProc();   //fill the list with valid processes
@@ -115,8 +116,8 @@ void calculate(){
     temp = h;
     while(temp!=NULL){
         calcp =(float) ( temp->value.ticks2 - temp->value.ticks1 ) / hz ; //usage of the processes | time passed is 1s, so no need to divide
-
-        printf("%s -- per used : %.2f %%\n",temp->value.comm,100 * calcp);
+        
+        printf("pid: %s\n%s -- per used : %.2f %%\n",temp->value.pid,temp->value.comm,100 * calcp);
         temp = temp->next;
     }
 
