@@ -61,7 +61,7 @@ Node * getHead(){
     return head;
 }
 
-void initiateProcValues(){
+void initializeProcValues(){
     if(head != NULL){
         Node * temp = head;
         while(temp != NULL){

@@ -85,13 +85,13 @@ void calculate(){
     long hz = sysconf(_SC_CLK_TCK);
     Node * h, * temp;
 
-    PIDsInProc();
-    h = getHead();
-    initiateProcValues();
+    PIDsInProc();   //fill the list with valid processes
+    h = getHead();  //get the first item of the list
+    initializeProcValues();   //initialize variables of the process struct in the list
 
     temp = h;   
     while(temp!=NULL){
-        temp->value.comm = command(temp->value.pid);
+        temp->value.comm = command(temp->value.pid);    //getting the names of the commands running the processes
         temp = temp->next;
     }
     

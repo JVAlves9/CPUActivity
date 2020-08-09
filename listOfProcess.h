@@ -18,4 +18,4 @@ void freeAll();
 
 int size();
 
-void initiateProcValues();
+void initializeProcValues();
