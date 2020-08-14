@@ -85,6 +85,7 @@ void recfreeAll(Node * r){
 
 void freeAll(){
     recfreeAll(head);
+    head = NULL;
 }
 
 int recsize(Node * r){

@@ -100,9 +100,11 @@ void calculate(){
     calcPercsNStore();
     mergeSort();
     temp = *h;
-    while(temp!=NULL){
+    i=0;
+    while(temp!=NULL && i < 10 ){
         printf("pid: %s\n%s -- per used : %.2f %%\n",temp->value.pid,temp->value.comm,100 * temp->value.perc);
         temp = temp->next;
+        i++;
     }
 
     for(i = 0; i < cpus+1; i++ ){   //per usage of each cpu, the first is from all cpus
@@ -111,4 +113,5 @@ void calculate(){
         calc0 = (used / total) * 100;
         printf("cpu%d:  %.2f%%\n",i,calc0);
     }
+    freeAll();
 }
