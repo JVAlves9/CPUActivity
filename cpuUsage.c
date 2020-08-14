@@ -4,7 +4,6 @@
 #include <sys/sysinfo.h>
 #include "listOfProcess.h"
 #include "processes.h"
-#include <string.h>
 
 void readUptime(float *used){
     FILE *uptime = fopen("/proc/uptime","r");   //get the file containing the active and idle times of the cpu
@@ -82,42 +81,27 @@ void calculate(){
     int cpus = get_nprocs(), i;
     long  idles1[cpus+1], idles2[cpus+1], *used1, *used2;
     float calc=0,calc0=0, total, used/*,calc1=0,calc2=0, calc3=0*/;
-    char pid[6]="";
-    long hz = sysconf(_SC_CLK_TCK); //used to transform ticks into seconds
-    Node * h, * temp;
+    Node ** h, * temp;
 
     PIDsInProc();   //fill the list with valid processes
     h = getHead();  //get the first item of the list
     initializeProcValues();   //initialize variables of the process struct in the list
+    getCommands();    
 
-    temp = h;   
-    while(temp!=NULL){
-        temp->value.comm = command(temp->value.pid);    //getting the names of the commands running the processes
-        temp = temp->next;
-    }
-    
     readUptime(&up1);
-    temp = h;   
-    while(temp!=NULL){
-        stat(&temp->value.ticks1,&temp->value.startime,temp->value.pid);   //get all processes ticks
-        temp = temp->next;
-    }
+    gettingStats(1);
     used1 = procStat(idles1,cpus);//first values
 
     sleep(1);
 
-    temp = h;
-    while(temp!=NULL){
-        stat(&temp->value.ticks2,&temp->value.startime,temp->value.pid);
-        temp = temp->next;
-    }
+    gettingStats(2);
     used2 = procStat(idles2,cpus);//second values
 
-    temp = h;
+    calcPercsNStore();
+    mergeSort();
+    temp = *h;
     while(temp!=NULL){
-        calcp =(float) ( temp->value.ticks2 - temp->value.ticks1 ) / hz ; //usage of the processes | time passed is 1s, so no need to divide
-        
-        printf("pid: %s\n%s -- per used : %.2f %%\n",temp->value.pid,temp->value.comm,100 * calcp);
+        printf("pid: %s\n%s -- per used : %.2f %%\n",temp->value.pid,temp->value.comm,100 * temp->value.perc);
         temp = temp->next;
     }
 

@@ -3,6 +3,7 @@
 #include <regex.h>
 #include <dirent.h>
 #include <string.h>
+#include <unistd.h>
 #include "listOfProcess.h"
 
 
@@ -17,7 +18,8 @@ void stat(long *ticks,long *up,char pid[]){
 
     if( sta == NULL){
         printf("file couldn't open in stat");
-        exit(EXIT_FAILURE);
+        remPro(pid);    //remove the pid that's problably not attached to a running process
+        return;
     }
 
     int i,j;
@@ -87,12 +89,13 @@ char * command(char pid[]){     //get the name of the process command
     char pro[20] = "/proc/";
     char c;
     strcat(pro,pid);
-    strcat(pro,"/comm");
+    strcat(pro,"/comm");    //concatenate the string to get the right /proc/{PID}/comm file
     FILE * comm = fopen(pro,"r");
 
     if( comm == NULL){
         printf("empty command");
-        exit(EXIT_FAILURE);
+        remPro(pid);    //remove the pid that's problably not attached to a running process
+        return NULL;
     }
 
     c = getc(comm);
@@ -106,4 +109,32 @@ char * command(char pid[]){     //get the name of the process command
     fclose(comm);
 
     return cmd;
+}
+
+void gettingStats(int ncall){    //using the stat function for all item in the list
+    Node * temp = *getHead();
+    while(temp!=NULL){
+        if(ncall == 1)
+            stat(&temp->value.ticks1,&temp->value.startime,temp->value.pid);    //get all processes ticks
+        else if( ncall == 2)
+            stat(&temp->value.ticks2,&temp->value.startime,temp->value.pid);
+        temp = temp->next;
+    }
+}
+
+void calcPercsNStore(){
+    Node * temp = *getHead();
+    long hz = sysconf(_SC_CLK_TCK); //used to transform ticks into seconds
+    while(temp != NULL){
+        temp->value.perc = (float) ( temp->value.ticks2 - temp->value.ticks1 ) / hz ;
+        temp = temp->next;
+    }
+}
+
+void getCommands(){ //get the name of the command to all processes
+    Node * temp = *getHead();
+    while(temp!=NULL){
+        temp->value.comm = command(temp->value.pid);    //getting the names of the commands running the processes
+        temp = temp->next;
+    }
 }

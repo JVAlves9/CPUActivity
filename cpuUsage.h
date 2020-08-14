@@ -7,4 +7,5 @@ typedef struct process{
     long ticks1;
     long ticks2;
     long startime;
+    float perc;
 } Process; 

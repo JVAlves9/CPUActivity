@@ -12,10 +12,12 @@ void remPro(char * pid);
 
 Process * findPro(char * pid);
 
-Node * getHead();
+Node ** getHead();
 
 void freeAll();
 
 int size();
 
 void initializeProcValues();
+
+void mergeSort();

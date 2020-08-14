@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "listOfProcess.h"
 
@@ -57,8 +58,8 @@ Process * findPro(char * pid){
     return NULL;
 }
 
-Node * getHead(){
-    return head;
+Node ** getHead(){
+    return &head;
 }
 
 void initializeProcValues(){
@@ -95,4 +96,67 @@ int recsize(Node * r){
 
 int size(){
     return recsize(head);
+}
+
+void printLista(){
+    Node *temp = head;
+    while(temp != NULL) {
+        printf("%s",temp->value.comm);
+        temp = temp->next;
+    }
+}
+
+//using merge sort for now, even though knowing the high usage
+
+Node * sortedMerge(Node *a, Node *b){
+    Node * r = NULL;
+    if(a == NULL)
+        return b;
+    else if(b == NULL)
+        return a;
+    
+    if(a->value.perc > b->value.perc){
+        r = a;
+        r->next = sortedMerge(a->next,b);
+    }else{
+        r = b;
+        r->next = sortedMerge(a,b->next);
+    }
+    return r;
+}
+
+void split(Node *src, Node ** front, Node **back){
+    Node* fast; 
+    Node* slow; 
+    slow = src; 
+    fast = src->next; 
+
+    while (fast != NULL) { 
+        fast = fast->next; 
+        if (fast != NULL) { 
+            slow = slow->next; 
+            fast = fast->next; 
+        } 
+    } 
+  
+    *front = src; 
+    *back = slow->next; 
+    slow->next = NULL;  
+}
+
+void mergeSortRec(Node ** headRef){
+    Node *h = *headRef;
+    Node *a, *b;
+    if(h != NULL && h->next != NULL){
+        split(h, &a, &b);
+
+        mergeSortRec(&a);
+        mergeSortRec(&b);
+
+        *headRef = sortedMerge(a,b);
+    }
+}
+
+void mergeSort(){
+    mergeSortRec(&head);
 }
