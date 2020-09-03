@@ -1,5 +1,5 @@
 
-void calculate();
+void calculate(float calc[]);
 
 typedef struct process{
     char  * pid;
@@ -9,3 +9,7 @@ typedef struct process{
     long startime;
     float perc;
 } Process; 
+
+long * procStat(long idle[], int cpus);
+
+void readUptime(float *used);

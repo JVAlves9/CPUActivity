@@ -7,7 +7,7 @@
       <!-- column-name cl1 -->
       <column type="gchararray"/>
       <!-- column-name cl2 -->
-      <column type="glong"/>
+      <column type="gchararray"/>
       <!-- column-name gfloat1 -->
       <column type="gfloat"/>
     </columns>
@@ -18,79 +18,238 @@
     <property name="default_height">250</property>
     <signal name="destroy" handler="on_main_window_destroy" swapped="no"/>
     <child>
-      <object class="GtkBox" id="g_box">
+      <object class="GtkStack" id="stck">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
         <child>
-          <object class="GtkScrolledWindow">
-            <property name="height_request">300</property>
+          <object class="GtkBox" id="g_box">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="shadow_type">in</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkViewport">
+              <object class="GtkStackSwitcher">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="stack">stck</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="height_request">300</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkTreeView" id="tv">
+                  <object class="GtkViewport">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">str</property>
-                    <property name="enable_grid_lines">both</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="select">
-                        <signal name="changed" handler="on_select_changed" swapped="no"/>
-                      </object>
-                    </child>
+                    <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkTreeViewColumn" id="cl_name">
-                        <property name="title" translatable="yes">Name</property>
-                        <property name="sort_indicator">True</property>
-                        <property name="sort_column_id">0</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="names"/>
-                          <attributes>
-                            <attribute name="text">0</attribute>
-                          </attributes>
+                      <object class="GtkTreeView" id="tv">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="model">str</property>
+                        <property name="search_column">0</property>
+                        <property name="enable_grid_lines">both</property>
+                        <signal name="start-interactive-search" handler="on_tv_start_interactive_search" swapped="no"/>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
                         </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="cl_pids">
-                        <property name="title" translatable="yes">PIDs</property>
-                        <property name="sort_indicator">True</property>
-                        <property name="sort_column_id">1</property>
                         <child>
-                          <object class="GtkCellRendererText" id="pids"/>
-                          <attributes>
-                            <attribute name="text">1</attribute>
-                          </attributes>
+                          <object class="GtkTreeViewColumn" id="cl_name">
+                            <property name="title" translatable="yes">Name</property>
+                            <property name="clickable">True</property>
+                            <property name="sort_indicator">True</property>
+                            <property name="sort_column_id">0</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="names"/>
+                              <attributes>
+                                <attribute name="text">0</attribute>
+                              </attributes>
+                            </child>
+                          </object>
                         </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="cl_perc">
-                        <property name="title" translatable="yes">CPU%</property>
-                        <property name="sort_indicator">True</property>
-                        <property name="sort_column_id">2</property>
                         <child>
-                          <object class="GtkCellRendererText" id="percs"/>
-                          <attributes>
-                            <attribute name="text">2</attribute>
-                          </attributes>
+                          <object class="GtkTreeViewColumn" id="cl_pids">
+                            <property name="title" translatable="yes">PID</property>
+                            <property name="clickable">True</property>
+                            <property name="sort_indicator">True</property>
+                            <property name="sort_column_id">1</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="pids"/>
+                              <attributes>
+                                <attribute name="text">1</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="cl_perc">
+                            <property name="title" translatable="yes">CPU%</property>
+                            <property name="clickable">True</property>
+                            <property name="sort_indicator">True</property>
+                            <property name="sort_order">descending</property>
+                            <property name="sort_column_id">2</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="percs"/>
+                              <attributes>
+                                <attribute name="text">2</attribute>
+                              </attributes>
+                            </child>
+                          </object>
                         </child>
                       </object>
                     </child>
                   </object>
                 </child>
               </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
             </child>
           </object>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
+            <property name="name">Processes</property>
+            <property name="title" translatable="yes">Processes</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="g_box2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkStackSwitcher">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="stack">stck</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="g_bo">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="vexpand">True</property>
+                        <property name="label" translatable="yes">100%</property>
+                        <property name="yalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="vexpand">True</property>
+                        <property name="label" translatable="yes">80%</property>
+                        <property name="yalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="vexpand">True</property>
+                        <property name="label" translatable="yes">60%</property>
+                        <property name="yalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="vexpand">True</property>
+                        <property name="label" translatable="yes">40%</property>
+                        <property name="yalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="vexpand">True</property>
+                        <property name="label" translatable="yes">20%</property>
+                        <property name="yalign">0</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">4</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkDrawingArea" id="drw_ar">
+                    <property name="width_request">440</property>
+                    <property name="height_request">300</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">baseline</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="name">CPU</property>
+            <property name="title" translatable="yes">CPU</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

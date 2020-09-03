@@ -76,11 +76,11 @@ long * procStat(long idle[], int cpus){
     return r;
 }
 
-void calculate(){
-    float up1 =0, calcp = 0.0;
+void calculate(float calc[]){
+    float up1 =0;
     int cpus = get_nprocs(), i;
     long  idles1[cpus+1], idles2[cpus+1], *used1, *used2;
-    float calc=0,calc0=0, total, used/*,calc1=0,calc2=0, calc3=0*/;
+    float total, used;
     Node ** h, * temp;
 
     PIDsInProc();   //fill the list with valid processes
@@ -103,8 +103,6 @@ void calculate(){
     for(i = 0; i < cpus+1; i++ ){   //per usage of each cpu, the first is from all cpus
         total = (idles2[i] - idles1[i] + used2[i] - used1[i]);
         used = (used2[i] - used1[i]);
-        calc0 = (used / total) * 100;
-        printf("cpu%d:  %.2f%%\n",i,calc0);
+        calc[i] = (used / total);
     }
-    freeAll();
 }

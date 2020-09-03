@@ -8,11 +8,6 @@ DEBUG=-g
 OPT=-O0
 #warnings
 WARN=-Wall
-#c files
-C_SOURCE=$(wildcard ./source/*.c)
-
-#headers
-H_SOURCE=$(wildcard ./source/*.h)
 
 PTHREAD=-pthread
 
@@ -25,30 +20,34 @@ GTKLIB=`pkg-config --cflags --libs gtk+-3.0`
 LD=gcc
 LDFLAGS=$(PTHREAD) $(GTKLIB) -export-dynamic
 
-OBJS=	$(subst .c,.o,$(subst source,objects,$(C_SOURCE)))
+OBJS=	objects/main.o \
+		objects/cpuUsage.o \
+		objects/listOfProcess.o \
+		objects/processes.o
 
-all:objFolder $(TARGET)
-
-$(TARGET): $(OBJS)
+all: $(OBJS)
 	@ echo 'Building binary using GCC linker: $@'
-	$(LD) -o $@ $(OBJS) $(LDFLAGS)
+	$(LD) -o $(TARGET) $(OBJS) $(LDFLAGS)
 	@ echo 'Finishid Building binary: $@'
 	@ echo ' '
 
-./objects/%.o: ./source/%.c ./source./%.h
+objects/listOfProcess.o: src/listOfProcess.c src/listOfProcess.h
 	@ echo 'Building target using GCC compiler: $<'
 	$(CC) -c $(CCFLAGS) $< $(GTKLIB) -o $@
 	@ echo ' '
-./objects/main.o: ./source/main.c $(H_SOURCE)
+objects/cpuUsage.o: src/cpuUsage.c src/cpuUsage.h
 	@ echo 'Building target using GCC compiler: $<'
 	$(CC) -c $(CCFLAGS) $< $(GTKLIB) -o $@
 	@ echo ' '
-
-objFolder:
-	@ mkdir -p objects
+objects/processes.o: src/processes.c src/processes.h
+	@ echo 'Building target using GCC compiler: $<'
+	$(CC) -c $(CCFLAGS) $< $(GTKLIB) -o $@
+	@ echo ' '
+objects/main.o: src/main.c
+	@ echo 'Building target using GCC compiler: $<'
+	$(CC) -c $(CCFLAGS) $< $(GTKLIB) -o $@
+	@ echo ' '
 
 clean:
-	@ rm -rf ./objects/*.o $(TARGET) *~
-	@ rmdir objects
+	@ rm -rf objects/*.o $(TARGET) *~
 
-.PHONY: all clean
